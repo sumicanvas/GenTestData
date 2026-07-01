@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timedelta
+import calendar
+import random
+from datetime import date, timedelta
 from pathlib import Path
 
 
@@ -9,6 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_OUT_DIR = BASE_DIR / "generated_utf8_1gb"
 DEFAULT_TARGET_BYTES = 1_000_000_000
 CONTENT_CHUNK_BYTES = 132
+DEFAULT_START_DATE = date(2023, 6, 30)
+DEFAULT_END_DATE = date(2026, 6, 30)
+DEFAULT_MONTHLY_MIN_ARTICLES = 10
+DEFAULT_RANDOM_SEED = 20260701
 
 MAST_COLS = ["DGUBUN", "YMD", "SEQNO", "NEWSCODE", "KIND", "KIND2", "TITLE", "SHCODE"]
 JMCODE_COLS = ["DGUBUN", "YMD", "SEQNO", "SHCODE", "EXPCODE", "NEWSCODE", "KIND"]
@@ -167,7 +173,77 @@ def build_html_content(index: int, title: str, source_name: str, stock: tuple[st
     return chunks
 
 
-def article_values(index: int):
+def month_ranges(start: date, end: date):
+    year = start.year
+    month = start.month
+
+    while (year, month) <= (end.year, end.month):
+        first = date(year, month, 1)
+        last = date(year, month, calendar.monthrange(year, month)[1])
+        yield max(start, first), min(end, last)
+
+        if month == 12:
+            year += 1
+            month = 1
+        else:
+            month += 1
+
+
+class DateSampler:
+    def __init__(self, start: date, end: date, monthly_min_articles: int, seed: int) -> None:
+        if start > end:
+            raise ValueError("start date must be earlier than or equal to end date")
+
+        self.start = start
+        self.end = end
+        self.total_days = (end - start).days
+        self.seed = seed
+        self.rng = random.Random(seed)
+        self.required_dates = self._build_required_dates(monthly_min_articles)
+        self.day_counts: dict[str, int] = {}
+
+    def _build_required_dates(self, monthly_min_articles: int) -> list[date]:
+        required: list[date] = []
+        for first, last in month_ranges(self.start, self.end):
+            days = (last - first).days
+            for _ in range(monthly_min_articles):
+                required.append(first + timedelta(days=self.rng.randint(0, days)))
+        required.extend([self.start, self.end])
+        self.rng.shuffle(required)
+        return required
+
+    @property
+    def required_count(self) -> int:
+        return len(self.required_dates)
+
+    def next_key_date(self, index: int) -> tuple[str, str]:
+        if index < len(self.required_dates):
+            selected = self.required_dates[index]
+        else:
+            selected = self.start + timedelta(days=self.rng.randint(0, self.total_days))
+
+        ymd = selected.strftime("%Y%m%d")
+        day_count = self.day_counts.get(ymd, 0)
+        self.day_counts[ymd] = day_count + 1
+
+        # NEWS SEQNO is 8 bytes. Use a deterministic pseudo-random slot per day
+        # to keep YMD+SEQNO unique while still spreading article times.
+        slot = (day_count * 7919 + self.seed) % 8_640_000
+        seconds = slot // 100
+        suffix = slot % 100
+        hour = seconds // 3600
+        minute = (seconds % 3600) // 60
+        second = seconds % 60
+        seqno = f"{hour:02d}{minute:02d}{second:02d}{suffix:02d}"
+
+        return ymd, seqno
+
+
+def parse_date(value: str) -> date:
+    return date.fromisoformat(value)
+
+
+def article_values(index: int, ymd: str, seqno: str):
     dgubun, kind, kind2, source_name = NEWS_SOURCES[index % len(NEWS_SOURCES)]
     primary = STOCKS[(index * 7) % len(STOCKS)]
     related_count = 1 + (index % 3)
@@ -175,9 +251,6 @@ def article_values(index: int):
     primary_code, primary_name, primary_theme = primary
     title = TITLE_PATTERNS[index % len(TITLE_PATTERNS)].format(name=primary_name, theme=primary_theme)
 
-    published_at = datetime(2026, 6, 25, 15, 30, 0) - timedelta(seconds=index)
-    ymd = published_at.strftime("%Y%m%d")
-    seqno = published_at.strftime("%H%M%S") + f"{index % 100:02d}"
     newscode = ymd + seqno
     content_chunks = build_html_content(index, title, source_name, primary)
 
@@ -188,6 +261,10 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate KB news UTF-8 tab-delimited test data.")
     parser.add_argument("--target-bytes", type=int, default=DEFAULT_TARGET_BYTES, help="combined output size target")
     parser.add_argument("--min-articles", type=int, default=500, help="minimum news_mast article rows")
+    parser.add_argument("--start-date", type=parse_date, default=DEFAULT_START_DATE, help="inclusive start date, YYYY-MM-DD")
+    parser.add_argument("--end-date", type=parse_date, default=DEFAULT_END_DATE, help="inclusive end date, YYYY-MM-DD")
+    parser.add_argument("--monthly-min-articles", type=int, default=DEFAULT_MONTHLY_MIN_ARTICLES, help="minimum articles per month")
+    parser.add_argument("--random-seed", type=int, default=DEFAULT_RANDOM_SEED, help="deterministic random seed")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUT_DIR, help="output directory")
     parser.add_argument("--progress-interval", type=int, default=50_000, help="progress print interval")
     return parser.parse_args()
@@ -209,6 +286,8 @@ def main() -> None:
     max_content_bytes = 0
     min_content_lines = 99
     max_content_lines = 0
+    date_sampler = DateSampler(args.start_date, args.end_date, args.monthly_min_articles, args.random_seed)
+    min_articles = max(args.min_articles, date_sampler.required_count)
 
     with (
         mast_path.open("wb", buffering=1024 * 1024) as mast,
@@ -220,8 +299,9 @@ def main() -> None:
         bytes_written += write_row(cont, CONT_COLS)
 
         index = 0
-        while bytes_written < args.target_bytes or article_count < args.min_articles:
-            dgubun, ymd, seqno, newscode, kind, kind2, title, primary_code, related, content_chunks = article_values(index)
+        while bytes_written < args.target_bytes or article_count < min_articles:
+            ymd, seqno = date_sampler.next_key_date(index)
+            dgubun, ymd, seqno, newscode, kind, kind2, title, primary_code, related, content_chunks = article_values(index, ymd, seqno)
 
             bytes_written += write_row(mast, [dgubun, ymd, seqno, newscode, kind, kind2, title, primary_code])
             article_count += 1
@@ -248,6 +328,10 @@ def main() -> None:
     print(f"news_mast_rows={article_count}")
     print(f"news_jmcode_rows={jmcode_count}")
     print(f"news_cont_p_rows={cont_count}")
+    print(f"date_start={args.start_date.isoformat()}")
+    print(f"date_end={args.end_date.isoformat()}")
+    print(f"monthly_min_articles={args.monthly_min_articles}")
+    print(f"random_seed={args.random_seed}")
     print(f"min_content_lines={min_content_lines}")
     print(f"max_content_lines={max_content_lines}")
     print(f"max_content_bytes={max_content_bytes}")
