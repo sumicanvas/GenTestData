@@ -66,6 +66,30 @@ python3 "/Users/sumi.ryu/Documents/opencode/kbpoc/generate_news_unified_collecti
 }
 ```
 
+```
+{
+  "_id": {
+    "$oid": "681946df0000000000000000"
+  },
+  "newscode_ts": {
+    "$date": "2025-05-05T23:16:47.000Z"
+  },
+  "title": "삼성전자, 반도체 업황 회복 기대에 강세",
+  "contents": [
+    "<div class=\"news\"><p><strong>삼성전자</strong>(005930)은 반도체 업황 개선 기대에 장중 강세를 보였다.</p><p>",
+    "증권가는 외국인 수급과 분기 실적 전망을 함께 확인해야 한다고 분석했다.</p><table><tr><td>인포스탁 ","테스트 기사</td></tr></table></div>"
+  ],
+  "dgubun": "4",
+  "shcode": [
+    "005930"
+  ],
+  "kind": [
+    "01",
+    "010000"
+  ]
+}
+```
+
 필드 설명:
 
 | 필드 | 설명 |
