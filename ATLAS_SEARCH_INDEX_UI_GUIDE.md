@@ -33,30 +33,27 @@ https://cloud.mongodb.com
 ```
 
 2. 테스트 중인 Cluster를 선택한다.
+<img width="1300" height="563" alt="image" src="https://github.com/user-attachments/assets/b20e3cb4-7c67-43e0-979f-e14bbce941ea" />
 
-3. Collections 화면으로 이동한다.
+<img width="1263" height="465" alt="image" src="https://github.com/user-attachments/assets/6bf930ee-60c9-4def-bd5a-f2669d0b01e4" />
+
+3. Index 명을 입력
+<img width="1269" height="729" alt="image" src="https://github.com/user-attachments/assets/99976106-8c5f-4e2a-a63f-69b8dbca77a4" />
 
 ```text
 Database > Browse Collections
 ```
 
-4. 왼쪽 컬렉션 목록에서 DB와 컬렉션을 선택한다.
+4. Search 대상 컬렉션을 선택
 
 ```text
 newsdb > news_array
 ```
+<img width="1246" height="754" alt="image" src="https://github.com/user-attachments/assets/a98d415d-d761-401f-bc7b-289b797251ce" />
 
-5. 컬렉션 화면 상단에서 `Search Indexes` 탭을 클릭한다.
 
-6. `Create Search Index` 버튼을 클릭한다.
+7. 생성 방식으로 `JSON Editor`를 선택한다. UI가 편할 경우 Visual Editor 선택
 
-7. 생성 방식으로 `JSON Editor`를 선택한다.
-
-8. Index Name에 아래 값을 입력한다.
-
-```text
-news_search_index
-```
 
 9. JSON Editor에 아래 인덱스 정의를 입력한다.
 
@@ -93,12 +90,11 @@ news_search_index
 ```
 
 10. `Create Search Index`를 클릭한다.
+<img width="878" height="486" alt="image" src="https://github.com/user-attachments/assets/9faafdfa-76f6-4a50-b661-63e766bbd1d3" />
 
 11. Search Index 상태가 `READY`가 될 때까지 기다린다.
 
-```text
-BUILDING -> READY
-```
+
 
 1GB 수준의 데이터이므로 인덱스 생성에 시간이 걸릴 수 있다.
 
