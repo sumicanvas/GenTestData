@@ -1,19 +1,6 @@
-# GenTestData
 #  뉴스 테스트 데이터 생성 정리
 
-`testdata` 폴더의 고객 샘플 엑셀과 `create_news_*.txt` 테이블 정의를 참고해 MongoDB 로딩용 UTF-8 탭 구분 테스트 데이터를 생성했다.
-
-## 생성 프롬프트
-폴더 kbtestdata 아래의 파일을 참고해줘. 
-고객에게 받은 데이터가 엑셀파일에 있어. 이걸 참고해서 csv 파일로 만들어줘. 딜리미터는 탭(\t)으로 해줘. news_mast 파일은 뉴스제목이야, news_jmcode 는 종목코드 데이터고, news_cont_i 은 뉴스내용이야. 각  create_news로 시작하는 create table 파일을 참고해서 항목을 매핑하면 되.YMD, SEQNO, NEWSCODE 가 키같아 이거에 맞춰서 외례키를 감안해서 만들어줘.
-증권 기사들을 가지고 와서 생성해줘 종목코드는 임의로 국내주식 종목코드를 넣어줘. 
-Newscode 날짜도 뉴스게시날짜나 아니면 임의로 생성해서 넣어줘. 
-
-news_mast 제목에 대한 레코드를 적어도 500개 이상 만들면 좋겠어.  제목에 해당하는 뉴스 컨텐츠를 만드는데 이전에도 이야기했지만 132바이트씩 잘라서  news_cont_p 콜렉션에 넣어줘야해. create_news_cont_p.txt 의 LINENO 가 해당기사가 몇개로 나눠져있는지 표시하는 거야. 그리고 뉴스제목 하나당 lineno가 3개에서 최대5개까지만 생성되게 만들어줘. 
-내용(news_cont_p)에는 html 태그가 앞뒤로 포함되고 중간에도 포함되어 있어야 해. 테스트 데이터도 html 태그를 꼭 포함해서 만들어야 줘. news_cont_p.xlsx 를 참고해줘. 
-테스트 데이터를 utf8 csv 로 생성하려고 해. 생성된 파일을  이후에 몽고디비로 로딩할거야.  
-전체 데이터 사이즈가 1 GB 정도로 생성해주면 좋겠어. 딱 맞추지 않아도 되고 적당히 저정도로.
-
+`kbtestdata` 폴더의 고객 샘플 엑셀과 `create_news_*.txt` 테이블 정의를 참고해 MongoDB 로딩용 UTF-8 탭 구분 테스트 데이터를 생성했다.
 
 ## 생성 결과
 
@@ -31,7 +18,7 @@ Delimiter: Tab (\t)
 Header: 있음
 ```
 
-생성 파일:
+생성 파일:TESTDATA_GENERATION
 
 | 파일 | 대상 컬렉션 | 데이터 건수 | 파일 크기 |
 |---|---|---:|---:|
@@ -78,8 +65,8 @@ DGUBUN	YMD	SEQNO	NEWSCODE	KIND	KIND2	TITLE	SHCODE
 
 ```text
 DGUBUN	YMD	SEQNO	NEWSCODE	KIND	KIND2	TITLE	SHCODE
-4	20260625	15300000	2026062515300000	01	010000	삼성전자, 반도체 업황 회복 기대에 강세	005930
-P	20260625	15295901	2026062515295901	P3	030000	삼성SDI, 외국인 순매수 확대 속 주가 반등	006400
+4	20250506	08164701	2025050608164701	01	010000	삼성전자, 반도체 업황 회복 기대에 강세	005930
+P	20260603	08164701	2026060308164701	P3	030000	삼성SDI, 외국인 순매수 확대 속 주가 반등	006400
 ```
 
 ### news_jmcode
@@ -141,12 +128,14 @@ YMD + SEQNO + NEWSCODE
 
 1GB 수준의 테스트 데이터를 맞추기 위해 `news_mast` 200건 고정이 아니라 전체 크기 기준으로 기사 수를 늘렸다.
 
-기사 날짜와 코드는 기준 시각에서 1초씩 감소시키며 생성했다.
+기사 날짜는 `2023-06-30`부터 `2026-06-30`까지 랜덤으로 분산 생성했다. 월별 검색/정렬 테스트를 위해 모든 월에 최소 10건 이상이 생성되도록 먼저 보장용 날짜 풀을 만든 뒤, 나머지 기사는 전체 기간에서 랜덤으로 선택한다.
+
+`SEQNO`는 날짜별 내부 카운터를 사용해 같은 날짜 안에서 중복되지 않도록 생성한다. `NEWSCODE`는 기존 규칙대로 `YMD + SEQNO`로 생성한다.
 
 ```python
-published_at = datetime(2026, 6, 25, 15, 30, 0) - timedelta(seconds=index)
-ymd = published_at.strftime("%Y%m%d")
-seqno = published_at.strftime("%H%M%S") + f"{index % 100:02d}"
+selected = start + timedelta(days=rng.randint(0, total_days))
+ymd = selected.strftime("%Y%m%d")
+seqno = f"{hour:02d}{minute:02d}{second:02d}{suffix:02d}"
 newscode = ymd + seqno
 ```
 
@@ -181,6 +170,9 @@ python3 "/Users/sumi.ryu/Documents/opencode/kbtestdata/generate_kb_news_testdata
 python3 "/Users/sumi.ryu/Documents/opencode/kbtestdata/generate_kb_news_testdata_1gb.py" \
   --target-bytes 1000000000 \
   --min-articles 500 \
+  --start-date 2023-06-30 \
+  --end-date 2026-06-30 \
+  --monthly-min-articles 10 \
   --progress-interval 100000
 ```
 
@@ -198,9 +190,15 @@ python3 "/Users/sumi.ryu/Documents/opencode/kbtestdata/generate_kb_news_testdata
 생성 후 검증한 결과:
 
 ```text
+min_ymd: 20230630
+max_ymd: 20260630
+months: 37
+min_month_count: 1160
 max_content_bytes: 132
 min_lines_per_article: 3
 max_lines_per_article: 5
+key_dupes: 0
+newscode_bad: 0
 bad_content_rows: 0
 bad_article_groups: 0
 ```
@@ -211,6 +209,10 @@ bad_article_groups: 0
 |---|---|
 | `CONTENT` 132 bytes 초과 여부 | 없음 |
 | 기사별 `LINENO` 3~5개 조건 | 정상 |
+| 날짜 범위 `2023-06-30`~`2026-06-30` | 정상 |
+| 월별 최소 10건 이상 | 정상 |
+| `DGUBUN + YMD + SEQNO` 중복 | 없음 |
+| `NEWSCODE = YMD + SEQNO` | 정상 |
 | 탭 구분 컬럼 수 | 정상 |
 | UTF-8 파일 생성 | 정상 |
 
@@ -262,7 +264,8 @@ mongoimport \
 
 URI에 database 이름이 없으면 `--db newsdb`를 추가한다.
 
+## 참고 사항
 
+`news_mast_utf8_tab.csv`는 약 124만 행이라 Microsoft Excel 행 제한인 1,048,576행을 초과한다. Excel에서 전체 파일을 열 수 없어도 TSV 구조 자체는 정상이다.
 
 GitHub에는 1GB 데이터 파일 자체를 올리기보다 생성 스크립트와 이 문서를 올리는 것을 권장한다. 대용량 결과 파일은 Git LFS 또는 별도 스토리지 사용을 권장한다.
-
