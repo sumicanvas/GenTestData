@@ -169,7 +169,8 @@ db.news_array.aggregate([
 
 ```js
 # 이렇게 조회할때 삼성과 전자가 분리되서 조회됨
-# sort를 제거했을 때 삼성전자로 제대로 조회됨 <- 이부분은 어떻게 가져갈지 정해야 함
+# sort를 제거했을 때 score로 계산되는 것 같음 삼성전자로 제대로 조회됨 <- 이부분은 어떻게 가져갈지 정해야 함
+# 삼성전자 실적 이런 형태로 했을 때 phrase는 조회 X 
 db.news_array.aggregate([
   {
     $search: {
