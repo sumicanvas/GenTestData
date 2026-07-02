@@ -77,7 +77,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -123,7 +123,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -179,7 +179,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -238,7 +238,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -286,7 +286,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -338,7 +338,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -386,7 +386,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -443,7 +443,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -494,7 +494,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
@@ -544,7 +544,7 @@ db.news_array.aggregate([
       }
     }
   },
-  { $limit: 100 },
+  { $limit: 10 },
   {
     $project: {
       _id: 1,
