@@ -282,6 +282,7 @@ db.news_array.aggregate([
         ]
       },
       sort: {
+        score: { $meta: "searchScore" },
         newscode_ts: -1
       }
     }
@@ -295,7 +296,8 @@ db.news_array.aggregate([
       contents: 1,
       dgubun: 1,
       shcode: 1,
-      kind: 1
+      kind: 1,
+      score: { $meta: "searchScore" }
     }
   }
 ]);
