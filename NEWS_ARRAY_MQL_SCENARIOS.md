@@ -38,6 +38,11 @@ Search Index: news_search_index
 | 검색어 있는 경우 | `score` 1차, `newscode_ts` 2차 정렬 |
 | 검색어 없는 경우 | `newscode_ts` 최신순 정렬 |
 
+- kind: [ '01', '010000' ] : 뉴스의 대분류/중분류처럼 쓰는 값일 가능성이 큽니다.
+예를 들면 개념적으로:
+01 = 시황
+010000 = 시황 상세 분류
+
 검색어가 있는 시나리오는 `text` 검색을 사용하고 `matchCriteria: "all"`을 적용한다.
 
 ```js
