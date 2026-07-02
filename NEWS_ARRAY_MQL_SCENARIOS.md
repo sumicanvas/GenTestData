@@ -477,8 +477,23 @@ db.news_array.aggregate([
         must: [
           {
             text: {
-              query: "<검색어>",
-              path: ["title", "contents"],
+              query: "삼영전자",
+              path: "title",
+              matchCriteria: "all",
+              fuzzy: {
+                maxEdits: 1,
+                prefixLength: 1,
+                maxExpansions: 50
+              }
+            }
+          }
+        ],
+        should: [
+          {
+            text: {
+              query: "삼영전자",
+              path: "contents",
+              matchCriteria: "all",
               fuzzy: {
                 maxEdits: 1,
                 prefixLength: 1,
