@@ -322,13 +322,13 @@ db.news_array.aggregate([
           {
             equals: {
               path: "shcode",
-              value: "<종목코드>"
+              value: "000660"
             }
           },
           {
             equals: {
               path: "dgubun",
-              value: "<뉴스구분>"
+              value: "4"
             }
           }
         ]
