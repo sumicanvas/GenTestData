@@ -196,6 +196,9 @@ db.news_array.aggregate([
   }
 ])
 ```
+<img width="656" height="758" alt="image" src="https://github.com/user-attachments/assets/1ebae228-29f6-4691-bb3f-6c94bc5976fe" />
+<img width="522" height="794" alt="image" src="https://github.com/user-attachments/assets/0b5cd363-79cc-4abf-90e1-82e1b9a80ca6" />
+
 ```js
 db.news_array.aggregate([
   {
