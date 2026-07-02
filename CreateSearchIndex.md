@@ -194,7 +194,34 @@ db.news_array.aggregate([
   }
 ])
 ```
-
+```
+db.news_array.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      phrase: {
+        query: "삼성전자",
+        path: ["title", "contents"]
+      },
+      sort: {
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 5 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      dgubun: 1,
+      shcode: 1,
+      kind: 1,
+      score: { $meta: "searchScore" }
+    }
+  }
+])
+```
 ### 2. 검색어 + 종목코드 filter
 
 ```js
