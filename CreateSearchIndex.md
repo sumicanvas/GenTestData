@@ -246,14 +246,6 @@ db.news_array.aggregate([
               matchCriteria: "all"
             }
           }
-        ],
-        filter: [
-          {
-            equals: {
-              path: "shcode",
-              value: "005930"
-            }
-          }
         ]
       },
       sort: {
