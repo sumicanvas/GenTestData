@@ -276,7 +276,7 @@ db.news_array.aggregate([
           {
             equals: {
               path: "shcode",
-              value: "<종목코드>"
+              value: "000660"
             }
           }
         ]
