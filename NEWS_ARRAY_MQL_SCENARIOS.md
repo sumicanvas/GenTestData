@@ -1,4 +1,4 @@
-<img width="1045" height="804" alt="image" src="https://github.com/user-attachments/assets/9b6c1941-91e8-45ab-87f0-e196bd412378" /># news_array 컬렉션 MQL 시나리오
+# news_array 컬렉션 MQL 시나리오
 
 `260701_MongoDB_PoC 검증 시나리오_교보증권.xlsx`의 시나리오를 `news_array` 컬렉션 기준으로 재작성한 MQL이다.
 
