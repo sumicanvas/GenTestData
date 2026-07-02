@@ -230,6 +230,54 @@ db.news_array.aggregate([
 ```
 <img width="589" height="667" alt="image" src="https://github.com/user-attachments/assets/337488ce-4320-4006-8c37-e1bfdb6608b6" />
 
+### 최종 1번
+
+```js
+db.news_array.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "삼성전자 실적",
+              path: ["title", "contents"],
+              matchCriteria: "all"
+            }
+          }
+        ],
+        filter: [
+          {
+            equals: {
+              path: "shcode",
+              value: "005930"
+            }
+          }
+        ]
+      },
+      sort: {
+        score: { $meta: "searchScore" },
+        newscode_ts: -1
+      }
+    }Build
+  },
+  { $limit: 10 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      dgubun: 1,
+      shcode: 1,
+      kind: 1,
+      score: { $meta: "searchScore" }
+    }
+  }
+])
+```
+
+
 ### 2. 검색어 + 종목코드 filter
 
 ```js
