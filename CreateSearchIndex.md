@@ -227,6 +227,8 @@ db.news_array.aggregate([
   }
 ])
 ```
+<img width="589" height="667" alt="image" src="https://github.com/user-attachments/assets/337488ce-4320-4006-8c37-e1bfdb6608b6" />
+
 ### 2. 검색어 + 종목코드 filter
 
 ```js
