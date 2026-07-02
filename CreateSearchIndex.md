@@ -194,7 +194,7 @@ db.news_array.aggregate([
   }
 ])
 ```
-```
+```js
 db.news_array.aggregate([
   {
     $search: {
