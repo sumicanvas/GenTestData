@@ -373,7 +373,7 @@ db.news_array.aggregate([
         must: [
           {
             text: {
-              query: "<검색어>",
+              query: "삼성전자",
               path: ["title", "contents"],
               matchCriteria: "all"
             }
