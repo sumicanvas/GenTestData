@@ -168,6 +168,8 @@ db.news_array.aggregate([
 ### 1. 제목/본문 검색
 
 ```js
+# 이렇게 조회할때 삼성과 전자가 분리되서 조회됨
+# sort를 제거했을 때 삼성전자로 제대로 조회됨 <- 이부분은 어떻게 가져갈지 정해야 함
 db.news_array.aggregate([
   {
     $search: {
