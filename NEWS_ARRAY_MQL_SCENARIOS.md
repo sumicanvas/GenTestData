@@ -422,7 +422,7 @@ db.news_array.aggregate([
         must: [
           {
             text: {
-              query: "<검색어>",
+              query: "해운업종",
               path: ["title", "contents"],
               matchCriteria: "all"
             }
@@ -432,7 +432,7 @@ db.news_array.aggregate([
           {
             equals: {
               path: "dgubun",
-              value: "<뉴스구분>"
+              value: "M"
             }
           }
         ]
