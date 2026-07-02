@@ -424,27 +424,7 @@ db.news_array.aggregate([
 ])
 ```
 
-## 자주 틀리는 부분
 
-컬렉션명을 잘못 지정하면 인덱스가 다른 컬렉션에 만들어진다.
-
-```text
-현재 컬렉션명: news_array
-```
-
-본문 필드명을 `content`로 만들면 검색되지 않는다.
-
-```text
-현재 본문 필드명: contents
-```
-
-`kind`는 소문자다.
-
-```text
-현재 필드명: kind
-```
-
-`mongoimport` 명령은 `mongosh` 안에서 실행하지 않는다. OS 터미널에서 실행한다.
 
 ## 참고
 
