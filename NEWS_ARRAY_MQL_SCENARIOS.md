@@ -282,12 +282,11 @@ db.news_array.aggregate([
         ]
       },
       sort: {
-        score: { $meta: "searchScore" },
         newscode_ts: -1
       }
     }
   },
-  { $limit: 10 },
+  { $limit: 100 },
   {
     $project: {
       _id: 1,
@@ -296,8 +295,7 @@ db.news_array.aggregate([
       contents: 1,
       dgubun: 1,
       shcode: 1,
-      kind: 1,
-      score: { $meta: "searchScore" }
+      kind: 1
     }
   }
 ]);
