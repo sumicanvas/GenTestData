@@ -297,7 +297,7 @@ node news_array_scenarios/scenario07_keyword.js --query "삼성전자 실적" --
 뉴스구분 + 검색어 검색.
 
 ```sh
-npm run scenario:8 -- --dgubun P --query "삼성전자 실적" --limit 5
+npm run scenario:8 -- --dgubun 4 --query "삼성전자" --limit 5
 ```
 
 직접 실행:
