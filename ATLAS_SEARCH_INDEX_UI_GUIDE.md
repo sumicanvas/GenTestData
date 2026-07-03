@@ -113,13 +113,9 @@ newsdb > news_array
 
 컬렉션명은 `news_array`이다.
 
-본문 필드명은 `contents`이다. `content`가 아니다.
-
-`kind`는 소문자이다. `Kind`가 아니다.
-
 `contents`, `shcode`, `kind`는 배열 필드지만 위 매핑으로 Atlas Search 인덱싱이 가능하다.
 
-`READY` 상태가 되기 전에는 `$search` 쿼리가 실패하거나 결과가 정상적으로 나오지 않을 수 있다.
+
 
 ## 생성 확인 쿼리
 
