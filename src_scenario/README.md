@@ -396,7 +396,6 @@ npm run scenario:7 -- --query "삼성전자" --limit 100 > scenario7_result.json
 
 ## GitHub 업로드 참고
 
-GitHub에는 아래 파일을 올리면 된다.
 
 ```text
 package.json
@@ -416,13 +415,5 @@ news_array_scenarios/README.md
 NEWS_ARRAY_NODE_SCENARIOS.md
 ```
 
-올리지 말아야 할 것:
-
-```text
-node_modules/
-.env
-MONGODB_URI가 포함된 파일
-news_array_scenarios/logs/
-```
 
 `node_modules/`는 `.gitignore`에 추가되어 있다.
