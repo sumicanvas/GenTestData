@@ -479,39 +479,58 @@ db.news_array.aggregate([
     $search: {
       index: "news_search_index",
       compound: {
-        must: [
+        should: [
           {
             text: {
-              query: "삼영전자",
+              query: "삼성전차",
               path: "title",
               matchCriteria: "all",
               fuzzy: {
                 maxEdits: 1,
                 prefixLength: 1,
                 maxExpansions: 50
+              },
+              score: {
+                boost: {
+                  value: 5
+                }
               }
             }
-          }
-        ],
-        should: [
+          },
           {
             text: {
-              query: "삼영전자",
+              query: "삼성전차",
               path: "contents",
               matchCriteria: "all",
               fuzzy: {
                 maxEdits: 1,
                 prefixLength: 1,
                 maxExpansions: 50
+              },
+              score: {
+                boost: {
+                  value: 1
+                }
               }
             }
           }
-        ]
+        ],
+        minimumShouldMatch: 1
       },
       sort: {
         score: { $meta: "searchScore" },
         newscode_ts: -1
       }
+    }
+  },
+  {
+    $addFields: {
+      score: { $meta: "searchScore" }
+    }
+  },
+  {
+    $match: {
+      score: { $gte: 1 }
     }
   },
   { $limit: 10 },
@@ -524,10 +543,11 @@ db.news_array.aggregate([
       dgubun: 1,
       shcode: 1,
       kind: 1,
-      score: { $meta: "searchScore" }
+      score: 1
     }
   }
 ]);
+
 ```
 
 ## 시나리오 10
