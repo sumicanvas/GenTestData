@@ -1,4 +1,5 @@
 news collection 구조의 테스트 데이터
+```
 {
   _id: ObjectId(...),
   newscode_ts: ISODate(...),
@@ -8,3 +9,4 @@ news collection 구조의 테스트 데이터
   shcode: ["005930", "000660"],
   kind: ["P3", "030000"]
 }
+```
