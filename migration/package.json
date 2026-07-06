@@ -1,0 +1,19 @@
+{
+  "name": "kbpoc-migrate",
+  "version": "1.0.0",
+  "description": "MongoDB migration scripts for KB POC news data.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "mongodb",
+    "migration"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "mongodb": "^7.4.0"
+  }
+}
