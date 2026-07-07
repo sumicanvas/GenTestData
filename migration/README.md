@@ -154,4 +154,73 @@ Date 변환 로직은 있다.
    
 <img width="439" height="265" alt="image" src="https://github.com/user-attachments/assets/adb63c18-6a33-43f9-bdfa-fed510a09e23" />
 
-
+3. 검색이 안되는 시나리오 생김
+   원인은 인덱스가 아니라 news_mig_500의 문서 구조 때문입니다.
+이미지 기준으로 news_mig_500은 뉴스 1건이 2개 문서로 나뉘어 있습니다.
+문서 1: title, dgubun, shcode 있음
+문서 2: parent, contents 있음
+예:
+{
+  _id: ObjectId("69553a705683d88cc08007b3"),
+  dgubun: "4",
+  title: "삼성전자, 반도체 업황 회복 기대에 강세",
+  shcode: [
+    { shcode: "005930", expcode: "A005930" }
+  ]
+}
+그리고 contents는 별도 문서입니다.
+{
+  _id: ObjectId("69553a705683d88cc18007b3"),
+  parent: ObjectId("69553a705683d88cc08007b3"),
+  contents: [
+    "...삼성전자...",
+    "...실적..."
+  ]
+}
+그래서 이 조건은 한 문서 안에서 동시에 만족되지 않습니다.
+text: {
+  query: "삼성전자 실적",
+  path: ["title", "contents"],
+  matchCriteria: "all"
+},
+filter: [
+  {
+    equals: {
+      path: "shcode.shcode",
+      value: "005930"
+    }
+  }
+]
+실제로 확인하면:
+"삼성전자" + shcode.shcode=005930 -> 결과 있음
+"실적" + shcode.shcode=005930 -> 결과 있음
+"삼성전자 실적" + shcode.shcode=005930 + matchCriteria all -> 결과 없음
+"삼성전자 실적" 필터 없음 -> contents 문서에서 결과 있음
+즉 contents 문서에는 "삼성전자 실적"이 있지만 shcode가 없고, shcode 문서에는 contents가 없습니다.
+해결 방법은 3가지입니다.
+1. 현재 news_mig_500 구조를 유지하고 검색어를 단순화
+query: "삼성전자"
+또는:
+query: "실적"
+2. matchCriteria: "all" 제거
+이러면 "삼성전자 실적" 중 일부 토큰만 맞아도 결과가 나올 수 있습니다.
+text: {
+  query: "삼성전자 실적",
+  path: ["title", "contents"]
+}
+다만 정확도는 낮아집니다.
+3. 권장: unified migration 결과 컬렉션 사용
+title, shcode, contents가 한 document에 모두 들어가는 구조가 필요합니다.
+{
+  title: "...",
+  shcode: [{ shcode: "005930" }],
+  contents: ["...", "..."]
+}
+이 구조여야 아래 쿼리가 의도대로 동작합니다.
+query: "삼성전자 실적"
+path: ["title", "contents"]
+filter: shcode.shcode = "005930"
+결론:
+news5_search_index는 READY이고 shcode.shcode path도 맞습니다.
+결과가 안 나오는 이유는 title/shcode와 contents가 서로 다른 document에 분리되어 있기 때문입니다.
+삼성전자 실적 + 005930 조건을 제대로 검증하려면 news_mig_500_unified 같은 통합 document 컬렉션을 만들어서 그 컬렉션에 Search Index를 생성해야 합니다.
