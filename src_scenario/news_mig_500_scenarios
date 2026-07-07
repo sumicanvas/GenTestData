@@ -1,0 +1,117 @@
+# news_mig_500 시나리오별 Node.js 실행 프로그램
+
+`news_mig_500` 컬렉션을 대상으로 Atlas Search MQL을 시나리오별 Node.js 프로그램으로 실행하기 위한 스크립트다.
+
+## 전제
+
+```text
+Database: newsdb
+Collection: news_mig_500
+Search Index: news_search_index
+```
+
+`news_mig_500`은 migration 결과 컬렉션이므로 종목코드가 아래처럼 object 배열에 들어가는 구조를 기본값으로 둔다.
+
+```js
+{
+  shcode: [
+    { shcode: "005930", expcode: "A005930" }
+  ]
+}
+```
+
+따라서 종목코드 필터 기본 path는 다음이다.
+
+```text
+shcode.shcode
+```
+
+만약 target 컬렉션이 `shcode: ["005930"]` 구조라면 실행 시 아래 옵션을 사용한다.
+
+```sh
+--shcode-path shcode
+```
+
+## 실행 방법
+
+`kbpoc` 디렉토리에서 실행한다.
+
+```sh
+cd /Users/sumi.ryu/Documents/opencode/kbpoc
+```
+
+직접 실행:
+
+```sh
+node news_mig_500_scenarios/scenario01_all_news.js --limit 5
+```
+
+npm script 실행:
+
+```sh
+npm run mig500:1 -- --limit 5
+```
+
+MQL만 확인:
+
+```sh
+npm run mig500:3 -- --shcode 005930 --query "삼성전자 실적" --limit 5 --dry-run
+```
+
+## 시나리오 목록
+
+| 시나리오 | npm script | 설명 | 주요 입력값 |
+|---|---|---|---|
+| 1 | `mig500:1` | 제목/본문 검색 후 최신순 조회 | `--query`, 기본값 `에헤라` |
+| 2 | `mig500:2` | 뉴스구분 조건 조회 | `--dgubun` |
+| 3 | `mig500:3` | 종목코드 + 검색어 검색 | `--shcode`, `--query` |
+| 4 | `mig500:4` | 종목코드 + 뉴스구분 + 검색어 검색 | `--shcode`, `--dgubun`, `--query` |
+| 5 | `mig500:5` | 종목코드 조건 조회 | `--shcode` |
+| 6 | `mig500:6` | 종목코드 + 뉴스구분 조건 조회 | `--shcode`, `--dgubun` |
+| 7 | `mig500:7` | 검색어 전체 검색 | `--query` |
+| 8 | `mig500:8` | 뉴스구분 + 검색어 검색 | `--dgubun`, `--query` |
+| 9 | `mig500:9` | Fuzzy 검색 | `--query`, `--title-boost`, `--contents-boost`, `--min-score` |
+| 10 | `mig500:10` | Highlight 검색 | `--query` |
+
+## 공통 옵션
+
+| 옵션 | 설명 | 기본값 |
+|---|---|---|
+| `--uri` | MongoDB 접속 문자열 | `MONGODB_URI` 환경변수 |
+| `--db` | database 이름 | `newsdb` |
+| `--collection` | collection 이름 | `news_mig_500` |
+| `--index` | Atlas Search index 이름 | `news_search_index` |
+| `--shcode-path` | 종목코드 Atlas Search path | `shcode.shcode` |
+| `--limit` | 조회 건수 | `100` |
+| `--dry-run` | MongoDB 접속 없이 MQL만 출력 | 비활성 |
+| `--no-log` | 로그 파일 기록 비활성화 | 비활성 |
+| `--help` | 사용법 출력 | 비활성 |
+
+## 실행 예시
+
+```sh
+npm run mig500:1 -- --limit 5
+npm run mig500:2 -- --dgubun P --limit 5
+npm run mig500:3 -- --shcode 005930 --query "삼성전자 실적" --limit 5
+npm run mig500:4 -- --shcode 005930 --dgubun P --query "삼성전자 실적" --limit 5
+npm run mig500:5 -- --shcode 005930 --limit 5
+npm run mig500:6 -- --shcode 005930 --dgubun P --limit 5
+npm run mig500:7 -- --query "삼성전자 실적" --limit 5
+npm run mig500:8 -- --dgubun P --query "삼성전자 실적" --limit 5
+npm run mig500:9 -- --query "삼영전자" --limit 5
+npm run mig500:10 -- --query "삼성전자 실적" --limit 5
+```
+
+## 로그
+
+실행 MQL, 쿼리 시작/종료 시각, 수행시간은 stderr와 아래 로그 파일에 출력된다.
+
+```text
+news_mig_500_scenarios/logs/
+```
+
+조회 결과 JSON은 stdout으로 출력된다.
+
+```sh
+npm run mig500:7 -- --query "삼성전자 실적" --limit 5 > result.json
+```
