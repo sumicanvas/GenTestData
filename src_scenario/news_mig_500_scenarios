@@ -93,7 +93,7 @@ npm run mig500:3 -- --shcode 005930 --query "삼성전자 실적" --limit 5 --dr
 npm run mig500:1 -- --limit 5
 npm run mig500:2 -- --dgubun P --limit 5
 npm run mig500:3 -- --shcode 005930 --query "삼성전자 실적" --limit 5
-npm run mig500:4 -- --shcode 005930 --dgubun P --query "삼성전자 실적" --limit 5
+npm run mig500:4 -- --shcode 005930 --dgubun 4 --query "삼성전자 실적" --limit 5
 npm run mig500:5 -- --shcode 005930 --limit 5
 npm run mig500:6 -- --shcode 005930 --dgubun P --limit 5
 npm run mig500:7 -- --query "삼성전자 실적" --limit 5
