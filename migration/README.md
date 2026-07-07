@@ -114,3 +114,44 @@ db.news_cont_p.createIndex({ SEQNO: 1, LINENO: 1 });
 - checkpoint 개수가 worker 수와 다름: 프로그램이 `migrator_*` checkpoint를 재생성합니다.
 - 진행률 표시가 깨짐: 터미널 높이가 `nWORKERS + 2` 줄 이상인지 확인합니다.
 - 조인 성능 저하: `news_jmcode.SEQNO`, 본문 컬렉션의 `(SEQNO, LINENO)` 인덱스를 확인합니다.
+
+## 수정사항 by SM
+1. newscode_ts 정확한 로직 확인
+즉 pipeline.js의 이 부분:
+transform_tmp: [
+  {
+    $project: {
+      _id: "$_newsId",
+      dgubun: "$DGUBUN",
+      title: "$TITLE",
+      seqno: "$SEQNO",
+      newscode_ts: { $toLong: "$_date" },
+      kind: ["$KIND", "$KIND2"],
+      shcodeTop: "$SHCODE",
+    },
+  },
+]
+수정 후:
+transform_tmp: [
+  {
+    $project: {
+      _id: "$_newsId",
+      dgubun: "$DGUBUN",
+      title: "$TITLE",
+      seqno: "$SEQNO",
+      newscode_ts: "$_date",
+      kind: ["$KIND", "$KIND2"],
+      shcodeTop: "$SHCODE",
+    },
+  },
+]
+정리하면:
+Date 변환 로직은 있다.
+하지만 최종 저장 직전에 $toLong으로 숫자로 바꾸고 있다.
+
+2. shcode 가 object 배열로 추가되는 부분 
+   shcodeTop: "$SHCODE"
+   
+<img width="439" height="265" alt="image" src="https://github.com/user-attachments/assets/adb63c18-6a33-43f9-bdfa-fed510a09e23" />
+
+
