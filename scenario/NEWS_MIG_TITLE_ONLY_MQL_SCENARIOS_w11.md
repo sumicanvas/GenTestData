@@ -271,66 +271,66 @@ db.news_mig_500.aggregate([
 조건:
 
 ```text
-종목코드 있음
+종목코드 없음
 뉴스구분 있음
 검색어 있음
-종목코드 filter + 뉴스구분 filter + title 검색
+뉴스구분 filter + title 검색
 ```
 
 실행:
 
 ```sh
-npm run mig500:4 -- --shcode 005930 --dgubun 4 --query "삼성전자" --limit 5
+npm run mig500:4 -- --dgubun 4 --query "삼성전자" --limit 5
 ```
 
 MQL:
 
 ```js
-db.news_mig_500.aggregate([
+db.news_mig.aggregate([
   {
-    $search: {
-      index: "news5_search_index",
-      compound: {
-        must: [
+    "$search": {
+      "index": "news_search_index",
+      "compound": {
+        "must": [
           {
-            text: {
-              query: "삼성전자",
-              path: "title",
-              matchCriteria: "all"
+            "text": {
+              "query": "삼성전자",
+              "path": "title",
+              "matchCriteria": "all"
             }
           }
         ],
-        filter: [
+        "filter": [
           {
-            equals: {
-              path: "shcode.shcode",
-              value: "005930"
-            }
-          },
-          {
-            equals: {
-              path: "dgubun",
-              value: "4"
+            "equals": {
+              "path": "dgubun",
+              "value": "4"
             }
           }
         ]
       },
-      sort: {
-        score: { $meta: "searchScore" },
-        newscode_ts: -1
+      "sort": {
+        "score": {
+          "$meta": "searchScore"
+        },
+        "newscode_ts": -1
       }
     }
   },
-  { $limit: 5 },
   {
-    $project: {
-      _id: 1,
-      newscode_ts: 1,
-      title: 1,
-      contents: 1,
-      dgubun: 1,
-      shcode: 1,
-      score: { $meta: "searchScore" }
+    "$limit": 5
+  },
+  {
+    "$project": {
+      "_id": 1,
+      "newscode_ts": 1,
+      "title": 1,
+      "contents": 1,
+      "dgubun": 1,
+      "shcode": 1,
+      "score": {
+        "$meta": "searchScore"
+      }
     }
   }
 ]);
