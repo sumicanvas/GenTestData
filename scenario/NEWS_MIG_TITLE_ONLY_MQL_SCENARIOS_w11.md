@@ -1,23 +1,22 @@
 # news_mig Title-Only MQL 시나리오 11 포함
 
-`news_mig_500` 컬렉션과 `news5_search_index` 기준으로 생성되는 시나리오별 MQL을 정리한다.
 
 ## 기준
 
 ```text
 Database: newsdb
-Collection: news_mig_500
-Search Index: news5_search_index
+Collection: news_mig
+Search Index: news_search_index
 ```
 
 현재 Search Index는 아래 구조를 기준으로 한다.
 
 ```js
 db.runCommand({
-  createSearchIndexes: "news_mig_500",
+  createSearchIndexes: "news_mig",
   indexes: [
     {
-      name: "news5_search_index",
+      name: "news_search_index",
       definition: {
         mappings: {
           dynamic: false,
