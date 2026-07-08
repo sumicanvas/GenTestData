@@ -118,7 +118,7 @@ title 검색 후 최신순 조회
 실행:
 
 ```sh
-npm run mig:1 -- --query "삼성전자" --limit 5
+npm run mig:1 -- --query "에헤라" --limit 5
 ```
 
 MQL:
@@ -132,7 +132,7 @@ db.news_mig.aggregate([
         must: [
           {
             text: {
-              query: "삼성전자",
+              query: "에헤라",
               path: "title"
             }
           }
