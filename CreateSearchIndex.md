@@ -138,10 +138,10 @@ db.runCommand({
 |---|---|---|
 | `title` | `string` + `lucene.nori` | 한국어 뉴스 제목 형태소 검색 |
 | `contents` | `string` + `lucene.nori` | 한국어 뉴스 본문 검색 |
-| `shcode` | `token` | 종목코드 exact filter 검색 |
+| `shcode` | `document + token` | obect arrary로 변환, 종목코드 exact filter 검색 |
 | `dgubun` | `token` | 뉴스구분 exact filter 검색 |
 | `kind` | `token` | kind 값 exact filter 검색 |
-| `newscode_ts` | `date` | 최신순 정렬 및 날짜 조건 |
+| `newscode_ts` | `number` | 최신순 정렬 및 날짜 조건(날짜를 long number로 변환) |
 
 `contents`, `shcode`, `kind`는 배열 필드다. Atlas Search는 문자열 배열도 인덱싱할 수 있으므로 위 매핑으로 사용할 수 있다.
 
