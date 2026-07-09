@@ -118,6 +118,7 @@ db.news_cont_p.createIndex({ SEQNO: 1, LINENO: 1 });
 ## 수정사항 by SM
 1. newscode_ts 정확한 로직 확인
 즉 pipeline.js의 이 부분:
+```
 transform_tmp: [
   {
     $project: {
@@ -145,11 +146,12 @@ transform_tmp: [
     },
   },
 ]
+```
 정리하면:
-Date 변환 로직은 있다.
-하지만 최종 저장 직전에 $toLong으로 숫자로 바꾸고 있다.
 
-2. shcode 가 object 배열로 추가되는 부분 
+하지만 newscode_ts는 최종 저장 직전에 $toLong으로 숫자로 바꾸고 있다.  
+
+3. shcode 가 object 배열로 추가되는 부분 
    shcodeTop: "$SHCODE"
    
 <img width="439" height="265" alt="image" src="https://github.com/user-attachments/assets/adb63c18-6a33-43f9-bdfa-fed510a09e23" />
@@ -159,7 +161,7 @@ Date 변환 로직은 있다.
 이미지 기준으로 news_mig_500은 뉴스 1건이 2개 문서로 나뉘어 있습니다.
 문서 1: title, dgubun, shcode 있음
 문서 2: parent, contents 있음
-예:
+```
 {
   _id: ObjectId("69553a705683d88cc08007b3"),
   dgubun: "4",
@@ -177,8 +179,10 @@ Date 변환 로직은 있다.
     "...실적..."
   ]
 }
+```
 그래서 이 조건은 한 문서 안에서 동시에 만족되지 않습니다.
-text: {
+```
+{
   query: "삼성전자 실적",
   path: ["title", "contents"],
   matchCriteria: "all"
@@ -191,229 +195,5 @@ filter: [
     }
   }
 ]
-실제로 확인하면:
-"삼성전자" + shcode.shcode=005930 -> 결과 있음
-"실적" + shcode.shcode=005930 -> 결과 있음
-"삼성전자 실적" + shcode.shcode=005930 + matchCriteria all -> 결과 없음
-"삼성전자 실적" 필터 없음 -> contents 문서에서 결과 있음
-즉 contents 문서에는 "삼성전자 실적"이 있지만 shcode가 없고, shcode 문서에는 contents가 없습니다.
-해결 방법은 3가지입니다.
-1. 현재 news_mig_500 구조를 유지하고 검색어를 단순화
-query: "삼성전자"
-또는:
-query: "실적"
-2. matchCriteria: "all" 제거
-이러면 "삼성전자 실적" 중 일부 토큰만 맞아도 결과가 나올 수 있습니다.
-text: {
-  query: "삼성전자 실적",
-  path: ["title", "contents"]
-}
-다만 정확도는 낮아집니다.
-3. 권장: unified migration 결과 컬렉션 사용
-title, shcode, contents가 한 document에 모두 들어가는 구조가 필요합니다.
-{
-  title: "...",
-  shcode: [{ shcode: "005930" }],
-  contents: ["...", "..."]
-}
-이 구조여야 아래 쿼리가 의도대로 동작합니다.
-query: "삼성전자 실적"
-path: ["title", "contents"]
-filter: shcode.shcode = "005930"
-결론:
-news5_search_index는 READY이고 shcode.shcode path도 맞습니다.
-결과가 안 나오는 이유는 title/shcode와 contents가 서로 다른 document에 분리되어 있기 때문입니다.
-삼성전자 실적 + 005930 조건을 제대로 검증하려면 news_mig_500_unified 같은 통합 document 컬렉션을 만들어서 그 컬렉션에 Search Index를 생성해야 합니다.
+```
 
-
-현재 news_mig_500 구조를 유지한다면 쿼리는 목적에 따라 달라져야 합니다.
-1. 종목코드 기준으로 제목 검색
-shcode가 있는 문서는 title도 있으므로 이 방식은 정상 동작합니다.
-db.news_mig_500.aggregate([
-  {
-    $search: {
-      index: "news5_search_index",
-      compound: {
-        must: [
-          {
-            text: {
-              query: "삼성전자",
-              path: "title"
-            }
-          }
-        ],
-        filter: [
-          {
-            equals: {
-              path: "shcode.shcode",
-              value: "005930"
-            }
-          }
-        ]
-      },
-      sort: {
-        score: { $meta: "searchScore" },
-        newscode_ts: -1
-      }
-    }
-  },
-  { $limit: 5 },
-  {
-    $project: {
-      _id: 1,
-      newscode_ts: 1,
-      title: 1,
-      dgubun: 1,
-      shcode: 1,
-      score: { $meta: "searchScore" }
-    }
-  }
-]);
-2. 종목코드 기준으로 본문까지 같이 보고 싶을 때
-현재 contents는 별도 문서에 있으므로, 먼저 title/shcode 문서를 찾고 parent로 contents 문서를 $lookup해야 합니다.
-db.news_mig_500.aggregate([
-  {
-    $search: {
-      index: "news5_search_index",
-      compound: {
-        must: [
-          {
-            text: {
-              query: "삼성전자",
-              path: "title"
-            }
-          }
-        ],
-        filter: [
-          {
-            equals: {
-              path: "shcode.shcode",
-              value: "005930"
-            }
-          }
-        ]
-      },
-      sort: {
-        score: { $meta: "searchScore" },
-        newscode_ts: -1
-      }
-    }
-  },
-  { $limit: 5 },
-  {
-    $lookup: {
-      from: "news_mig_500",
-      localField: "_id",
-      foreignField: "parent",
-      as: "content_doc"
-    }
-  },
-  {
-    $set: {
-      contents: {
-        $arrayElemAt: ["$content_doc.contents", 0]
-      }
-    }
-  },
-  {
-    $project: {
-      content_doc: 0
-    }
-  }
-]);
-3. "삼성전자 실적"을 꼭 검색어로 쓰고 싶을 때
-현재 구조에서는 삼성전자는 title 문서에, 실적은 contents 문서에 있으므로 같은 document에서 matchCriteria: "all"을 만족하지 못합니다.
-그래서 matchCriteria: "all"을 제거해야 합니다.
-db.news_mig_500.aggregate([
-  {
-    $search: {
-      index: "news5_search_index",
-      compound: {
-        must: [
-          {
-            text: {
-              query: "삼성전자 실적",
-              path: "title"
-            }
-          }
-        ],
-        filter: [
-          {
-            equals: {
-              path: "shcode.shcode",
-              value: "005930"
-            }
-          }
-        ]
-      },
-      sort: {
-        score: { $meta: "searchScore" },
-        newscode_ts: -1
-      }
-    }
-  },
-  { $limit: 5 }
-]);
-다만 이 경우 title 기준 검색이라 "실적"은 거의 무시될 수 있습니다.
-추천 쿼리
-현재 구조에서 가장 현실적인 쿼리는 이겁니다.
-db.news_mig_500.aggregate([
-  {
-    $search: {
-      index: "news5_search_index",
-      compound: {
-        must: [
-          {
-            text: {
-              query: "삼성전자",
-              path: "title"
-            }
-          }
-        ],
-        filter: [
-          {
-            equals: {
-              path: "shcode.shcode",
-              value: "005930"
-            }
-          }
-        ]
-      },
-      sort: {
-        score: { $meta: "searchScore" },
-        newscode_ts: -1
-      }
-    }
-  },
-  { $limit: 5 },
-  {
-    $lookup: {
-      from: "news_mig_500",
-      localField: "_id",
-      foreignField: "parent",
-      as: "content_doc"
-    }
-  },
-  {
-    $set: {
-      contents: {
-        $arrayElemAt: ["$content_doc.contents", 0]
-      }
-    }
-  },
-  {
-    $project: {
-      _id: 1,
-      newscode_ts: 1,
-      title: 1,
-      contents: 1,
-      dgubun: 1,
-      shcode: 1,
-      score: { $meta: "searchScore" }
-    }
-  }
-]);
-이 쿼리는:
-title/shcode 문서에서 검색
--> parent 관계로 contents 문서 lookup
--> 결과에 contents 붙여서 반환
