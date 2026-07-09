@@ -92,7 +92,7 @@ db.news_array.findOne()
 
 ```js
 db.runCommand({
-  createSearchIndexes: "news_array",
+  createSearchIndexes: "news_mig",
   indexes: [
     {
       name: "news_search_index",
@@ -111,23 +111,25 @@ db.runCommand({
               searchAnalyzer: "lucene.nori"
             },
             shcode: {
-              type: "token"
+              type: "document",
+              fields: {
+                shcode: {
+                  type: "token"
+                }
+              }
             },
             dgubun: {
               type: "token"
             },
-            kind: {
-              type: "token"
-            },
             newscode_ts: {
-              type: "date"
+              type: "number"
             }
           }
         }
       }
     }
   ]
-})
+});
 ```
 
 ## 필드 타입 선택 이유
