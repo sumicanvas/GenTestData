@@ -8,7 +8,7 @@
 
 ```text
 Database: newsdb
-Collection: news_array
+Collection: news_mig
 ```
 
 테스트 데이터 파일:
