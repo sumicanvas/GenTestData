@@ -14,7 +14,7 @@ Collection: news_mig
 테스트 데이터 파일:
 
 ```text
-kbpoc/generated_news_collection_1gb/news_unified_collection_1gb_contents_array.json
+kbpoc/generated_sjson_500mb/news_sjson_mast.json
 ```
 
 문서 구조:
