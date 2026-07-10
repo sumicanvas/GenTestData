@@ -1,118 +1,94 @@
-# news_array 시나리오 실행 가이드
+# news_mig Title-Only MQL 시나리오
 
-`news_array` 컬렉션의 Atlas Search POC 시나리오를 Node.js 프로그램으로 실행하는 방법을 정리한다.
+`news_mig` 컬렉션과 `news_search_index` 기준으로 실행하는 시나리오별 MQL을 정리한다.
 
-## 대상
+## 기준
 
 ```text
 Database: newsdb
-Collection: news_array
+Collection: news_mig
 Search Index: news_search_index
 ```
 
-시나리오 프로그램 위치는 다음과 같다.
+시나리오 프로그램 위치:
 
 ```text
-kbpoc/news_array_scenarios/
+kbpoc/news_mig_scenarios/
 ```
 
-공통 실행 로직은 다음 파일에 있다.
+npm script:
 
 ```text
-kbpoc/news_array_scenarios/common.js
+mig:1
+mig:2
+mig:3
+mig:4
+mig:5
+mig:6
+mig:7
+mig:8
+mig:9
+mig:10
 ```
 
-## 변경된 출력 방식
+## Search Index 기준
 
-전체 시나리오에서 MongoDB 쿼리 실행 전에 실제 실행되는 MQL을 먼저 출력한다.
-
-출력 순서는 다음과 같다.
+`news_mig`에는 아래 이름의 Atlas Search Index가 있다고 가정한다.
 
 ```text
-실행 MQL
-쿼리시작전
-쿼리수행후
-조회 결과 JSON
-전체수행시간
+news_search_index
 ```
 
-실제 실행 시 출력 위치는 다음과 같다.
+필드 구조는 다음 기준이다.
 
-| 출력 | 위치 |
-|---|---|
-| 실행 MQL | stderr, 로그 파일 |
-| 쿼리시작전 | stderr, 로그 파일 |
-| 쿼리수행후 | stderr, 로그 파일 |
-| 전체수행시간 | stderr, 로그 파일 |
-| 조회 결과 JSON | stdout |
+| 필드 | 타입 | 용도 |
+|---|---|---|
+| `title` | `string`, `lucene.nori` | 제목 검색 |
+| `contents` | `string`, `lucene.nori` | 본문 검색, 9/10번 기능 검증용 |
+| `shcode.shcode` | `token` | 종목코드 exact filter |
+| `dgubun` | `token` | 뉴스구분 exact filter |
+| `newscode_ts` | `number` | 최신순 정렬 |
 
-조회 결과만 파일로 저장할 때는 stdout redirect를 사용한다.
+## 변경 기준
 
-```sh
-npm run scenario:7 -- --query "삼성전자 실적" --limit 5 > result.json
-```
+기존 `news_mig_500` 기준을 아래처럼 변경했다.
 
-이 경우 MQL과 수행시간은 stderr에 출력되므로 `result.json`에는 조회 결과 JSON만 저장된다.
+| 항목 | 변경 전 | 변경 후 |
+|---|---|---|
+| Collection | `news_mig_500` | `news_mig` |
+| Search Index | `news5_search_index` | `news_search_index` |
+| npm script prefix | `mig500:*` | `mig:*` |
 
-## MQL 출력 예시
-
-시나리오 실행 시 `쿼리시작전` 로그보다 먼저 아래 형태의 MQL이 출력된다.
+1~8번 시나리오의 일반 검색은 `title`만 조회하도록 구성했다.
 
 ```js
-실행 MQL:
-db.news_array.aggregate([
-  {
-    "$search": {
-      "index": "news_search_index",
-      "text": {
-        "query": "에헤라",
-        "path": [
-          "title",
-          "contents"
-        ]
-      },
-      "sort": {
-        "newscode_ts": -1
-      }
-    }
-  },
-  {
-    "$limit": 5
-  },
-  {
-    "$project": {
-      "_id": 1,
-      "newscode_ts": 1,
-      "title": 1,
-      "dgubun": 1,
-      "shcode": 1,
-      "kind": 1
-    }
-  }
-]);
-쿼리시작전: 2026-07-06T00:00:00.000Z db=newsdb collection=news_array limit=5
+text: {
+  query: "삼성전자",
+  path: "title",
+  matchCriteria: "all"
+}
 ```
 
-## 설치
+9번 fuzzy와 10번 highlight는 기능 검증 목적상 `title`, `contents`를 모두 사용한다.
 
-`kbpoc` 디렉토리에서 의존성을 설치한다.
+## 실행 방법
+
+아래 명령은 `kbpoc` 디렉토리에서 실행한다.
 
 ```sh
-npm install
+cd /Users/sumi.ryu/Documents/opencode/kbpoc
 ```
 
-## 접속 정보
-
-Atlas 접속 문자열을 환경변수로 설정한다.
+MQL만 확인하려면 `--dry-run`을 사용한다.
 
 ```sh
-export MONGODB_URI='mongodb+srv://<user>:<password>@<cluster-url>/newsdb?retryWrites=true&w=majority'
+npm run mig:4 -- --dgubun 4 --query "삼성전자" --limit 5 --dry-run
 ```
 
-명령 실행 시 `--uri` 옵션으로 직접 전달할 수도 있다.
+실제 실행은 `--dry-run`을 제거한다.
 
 ```sh
-npm run scenario:1 -- --uri 'mongodb+srv://<user>:<password>@<cluster-url>/newsdb?retryWrites=true&w=majority' --limit 5
+npm run mig:4 -- --dgubun 4 --query "삼성전자" --limit 5
 ```
 
 ## 공통 옵션
@@ -121,291 +97,548 @@ npm run scenario:1 -- --uri 'mongodb+srv://<user>:<password>@<cluster-url>/newsd
 |---|---|---|
 | `--uri` | MongoDB 접속 문자열 | `MONGODB_URI` 환경변수 |
 | `--db` | database 이름 | `newsdb` |
-| `--collection` | collection 이름 | `news_array` |
+| `--collection` | collection 이름 | `news_mig` |
 | `--index` | Atlas Search index 이름 | `news_search_index` |
+| `--shcode-path` | 종목코드 filter path | `shcode.shcode` |
 | `--limit` | 조회 건수 | `100` |
 | `--dry-run` | MongoDB 접속 없이 MQL만 출력 | 비활성 |
 | `--no-log` | 로그 파일 기록 비활성화 | 비활성 |
-| `--help` | 사용법 출력 | 비활성 |
 
-필수 입력값을 CLI 옵션으로 주지 않으면 프로그램이 터미널에서 값을 물어본다.
+## 시나리오 1
 
-## dry-run
+조건:
 
-`--dry-run`을 사용하면 MongoDB에 접속하지 않고 실행될 MQL만 확인한다.
-
-```sh
-npm run scenario:1 -- --dry-run --limit 5
+```text
+검색어 있음
+종목코드 없음
+뉴스구분 없음
+title 검색 후 최신순 조회
 ```
 
-출력 예시는 다음과 같다.
+실행:
+
+```sh
+npm run mig:1 -- --query "삼성전자" --limit 5
+```
+
+MQL:
 
 ```js
-db.news_array.aggregate([
+db.news_mig.aggregate([
   {
-    "$search": {
-      "index": "news_search_index",
-      "text": {
-        "query": "에헤라",
-        "path": [
-          "title",
-          "contents"
+    $search: {
+      index: "news_search_index",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "삼성전자",
+              path: "title"
+            }
+          }
         ]
       },
-      "sort": {
-        "newscode_ts": -1
+      sort: {
+        newscode_ts: -1
       }
     }
   },
+  { $limit: 5 },
   {
-    "$limit": 5
-  },
-  {
-    "$project": {
-      "_id": 1,
-      "newscode_ts": 1,
-      "title": 1,
-      "dgubun": 1,
-      "shcode": 1,
-      "kind": 1
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      dgubun: 1,
+      shcode: 1
     }
   }
 ]);
 ```
 
-## 시나리오 목록
+## 시나리오 2
 
-| 시나리오 | npm script | 설명 | 주요 입력값 |
-|---|---|---|---|
-| 1 | `scenario:1` | 제목/본문 검색 후 최신순 조회 | `--query`, 기본값 `에헤라` |
-| 2 | `scenario:2` | 뉴스구분 조건 조회 | `--dgubun` |
-| 3 | `scenario:3` | 종목코드 + 검색어 검색 | `--shcode`, `--query` |
-| 4 | `scenario:4` | 종목코드 + 뉴스구분 + 검색어 검색 | `--shcode`, `--dgubun`, `--query` |
-| 5 | `scenario:5` | 종목코드 조건 조회 | `--shcode` |
-| 6 | `scenario:6` | 종목코드 + 뉴스구분 조건 조회 | `--shcode`, `--dgubun` |
-| 7 | `scenario:7` | 검색어 전체 검색 | `--query` |
-| 8 | `scenario:8` | 뉴스구분 + 검색어 검색 | `--dgubun`, `--query` |
-| 9 | `scenario:9` | Fuzzy 검색 | `--query`, `--title-boost`, `--contents-boost`, `--min-score` |
-| 10 | `scenario:10` | Highlight 검색 | `--query` |
-
-## 시나리오별 실행 명령
-
-아래 명령은 모두 `kbpoc` 디렉토리에서 실행한다.
-
-```sh
-cd /Users/sumi.ryu/Documents/opencode/kbpoc
-```
-
-### 시나리오 1
-
-기본 검색어 `에헤라`로 제목/본문을 검색하고 최신순으로 조회한다.
-
-```sh
-npm run scenario:1 -- --limit 5
-```
-
-검색어를 직접 지정한다.
-
-```sh
-npm run scenario:1 -- --query "삼성전자" --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:1 -- --dry-run --limit 5
-```
-
-### 시나리오 2
-
-뉴스구분 조건으로 해당 뉴스매체의 뉴스를 최신순 조회한다.
-
-```sh
-npm run scenario:2 -- --dgubun P --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:2 -- --dgubun P --dry-run --limit 5
-```
-
-### 시나리오 3
-
-종목코드와 검색어로 검색한다.
-
-```sh
-npm run scenario:3 -- --shcode 005930 --query "삼성전자 실적" --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:3 -- --shcode 005930 --query "삼성전자 실적" --dry-run --limit 5
-```
-
-### 시나리오 4
-
-종목코드, 뉴스구분, 검색어로 검색한다.
-
-```sh
-npm run scenario:4 -- --shcode 005930 --dgubun P --query "삼성전자 실적" --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:4 -- --shcode 005930 --dgubun P --query "삼성전자 실적" --dry-run --limit 5
-```
-
-### 시나리오 5
-
-종목코드 조건으로 해당 종목의 뉴스를 최신순 조회한다.
-
-```sh
-npm run scenario:5 -- --shcode 005930 --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:5 -- --shcode 005930 --dry-run --limit 5
-```
-
-### 시나리오 6
-
-종목코드와 뉴스구분 조건으로 뉴스를 최신순 조회한다.
-
-```sh
-npm run scenario:6 -- --shcode 005930 --dgubun P --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:6 -- --shcode 005930 --dgubun P --dry-run --limit 5
-```
-
-### 시나리오 7
-
-검색어만 사용해 전체 뉴스에서 검색한다.
-
-```sh
-npm run scenario:7 -- --query "삼성전자 실적" --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:7 -- --query "삼성전자 실적" --dry-run --limit 5
-```
-
-### 시나리오 8
-
-뉴스구분과 검색어로 검색한다.
-
-```sh
-npm run scenario:8 -- --dgubun P --query "삼성전자 실적" --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:8 -- --dgubun P --query "삼성전자 실적" --dry-run --limit 5
-```
-
-### 시나리오 9
-
-Fuzzy 검색을 실행한다.
-
-```sh
-npm run scenario:9 -- --query "삼영전자" --limit 5
-```
-
-가중치를 조정한다.
-
-```sh
-npm run scenario:9 -- --query "삼영전자" --title-boost 3 --contents-boost 1 --limit 5
-```
-
-score 컷오프를 조정한다.
-
-```sh
-npm run scenario:9 -- --query "사성전" --min-score 1 --limit 5
-```
-
-낮은 score 결과까지 모두 확인한다.
-
-```sh
-npm run scenario:9 -- --query "사성전" --min-score 0 --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:9 -- --query "삼영전자" --dry-run --limit 5
-```
-
-### 시나리오 10
-
-Highlight 검색을 실행한다.
-
-```sh
-npm run scenario:10 -- --query "삼성전자 실적" --limit 5
-```
-
-MQL만 확인한다.
-
-```sh
-npm run scenario:10 -- --query "삼성전자 실적" --dry-run --limit 5
-```
-
-## 로그 파일
-
-로그 파일은 아래 경로에 생성된다.
+조건:
 
 ```text
-kbpoc/news_array_scenarios/logs/
+뉴스구분 있음
+종목코드 없음
+검색어 없음
+뉴스구분 조건 조회
 ```
 
-로그에는 실행 MQL, 쿼리 시작 시각, 쿼리 종료 시각, 조회 건수, 전체수행시간이 기록된다.
-
-로그 파일 기록을 끄려면 `--no-log`를 사용한다.
+실행:
 
 ```sh
-npm run scenario:7 -- --query "삼성전자 실적" --limit 5 --no-log
+npm run mig:2 -- --dgubun P --limit 5
 ```
 
-## 직접 실행
+MQL:
 
-npm script 대신 Node.js 파일을 직접 실행할 수도 있다.
-
-```sh
-node news_array_scenarios/scenario07_keyword.js --query "삼성전자 실적" --limit 5
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        filter: [
+          {
+            equals: {
+              path: "dgubun",
+              value: "P"
+            }
+          }
+        ]
+      },
+      sort: {
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 5 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      contents: 1,
+      dgubun: 1,
+      shcode: 1
+    }
+  }
+]);
 ```
 
-직접 실행에서도 MQL 출력, 수행시간 출력, 로그 기록 방식은 동일하다.
+## 시나리오 3
 
-## 결과 저장
+조건:
 
-조회 결과 JSON만 파일로 저장한다.
-
-```sh
-npm run scenario:3 -- --shcode 005930 --query "삼성전자 실적" --limit 100 > scenario3_result.json
+```text
+종목코드 있음
+검색어 있음
+뉴스구분 없음
+종목코드 filter + title 검색
 ```
 
-MQL과 수행시간까지 함께 파일로 저장하려면 stderr도 redirect한다.
+실행:
 
 ```sh
-npm run scenario:3 -- --shcode 005930 --query "삼성전자 실적" --limit 100 > scenario3_result.json 2> scenario3_log.txt
+npm run mig:3 -- --shcode 005930 --query "삼성전자" --limit 5
+```
+
+MQL:
+
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "삼성전자",
+              path: "title",
+              matchCriteria: "all"
+            }
+          }
+        ],
+        filter: [
+          {
+            equals: {
+              path: "shcode.shcode",
+              value: "005930"
+            }
+          }
+        ]
+      },
+      sort: {
+        score: { $meta: "searchScore" },
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 5 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      contents: 1,
+      dgubun: 1,
+      shcode: 1,
+      score: { $meta: "searchScore" }
+    }
+  }
+]);
+```
+
+## 시나리오 4
+
+조건:
+
+```text
+종목코드 없음
+뉴스구분 있음
+검색어 있음
+뉴스구분 filter + title 검색
+```
+
+실행:
+
+```sh
+npm run mig:4 -- --dgubun 4 --query "삼성전자" --limit 5
+```
+
+MQL:
+
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "삼성전자",
+              path: "title",
+              matchCriteria: "all"
+            }
+          }
+        ],
+        filter: [
+          {
+            equals: {
+              path: "dgubun",
+              value: "4"
+            }
+          }
+        ]
+      },
+      sort: {
+        score: { $meta: "searchScore" },
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 5 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      contents: 1,
+      dgubun: 1,
+      shcode: 1,
+      score: { $meta: "searchScore" }
+    }
+  }
+]);
+```
+
+## 시나리오 5
+
+조건:
+
+```text
+종목코드 있음
+뉴스구분 없음
+검색어 없음
+종목코드 조건 조회
+```
+
+실행:
+
+```sh
+npm run mig:5 -- --shcode 005930 --limit 5
+```
+
+MQL:
+
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        filter: [
+          {
+            equals: {
+              path: "shcode.shcode",
+              value: "005930"
+            }
+          }
+        ]
+      },
+      sort: {
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 5 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      contents: 1,
+      dgubun: 1,
+      shcode: 1
+    }
+  }
+]);
+```
+
+## 시나리오 6
+
+조건:
+
+```text
+종목코드 있음
+뉴스구분 있음
+검색어 없음
+종목코드 + 뉴스구분 조건 조회
+```
+
+실행:
+
+```sh
+npm run mig:6 -- --shcode 005930 --dgubun P --limit 5
+```
+
+MQL:
+
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        filter: [
+          {
+            equals: {
+              path: "shcode.shcode",
+              value: "005930"
+            }
+          },
+          {
+            equals: {
+              path: "dgubun",
+              value: "P"
+            }
+          }
+        ]
+      },
+      sort: {
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 5 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      contents: 1,
+      dgubun: 1,
+      shcode: 1
+    }
+  }
+]);
+```
+
+## 시나리오 7
+
+조건:
+
+```text
+검색어 있음
+종목코드 없음
+뉴스구분 없음
+title 전체 검색
+```
+
+실행:
+
+```sh
+npm run mig:7 -- --query "삼성전자" --limit 5
+```
+
+MQL:
+
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "삼성전자",
+              path: "title",
+              matchCriteria: "all"
+            }
+          }
+        ]
+      },
+      sort: {
+        score: { $meta: "searchScore" },
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 5 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      contents: 1,
+      dgubun: 1,
+      shcode: 1,
+      score: { $meta: "searchScore" }
+    }
+  }
+]);
+```
+
+## 시나리오 8
+
+조건:
+
+```text
+뉴스구분 있음
+검색어 있음
+종목코드 없음
+뉴스구분 filter + title 검색
+```
+
+실행:
+
+```sh
+npm run mig:8 -- --dgubun 4 --query "삼성전자" --limit 5
+```
+
+MQL:
+
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "삼성전자",
+              path: "title",
+              matchCriteria: "all"
+            }
+          }
+        ],
+        filter: [
+          {
+            equals: {
+              path: "dgubun",
+              value: "4"
+            }
+          }
+        ]
+      },
+      sort: {
+        score: { $meta: "searchScore" },
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 5 },
+  {
+    $project: {
+      _id: 1,
+      newscode_ts: 1,
+      title: 1,
+      contents: 1,
+      dgubun: 1,
+      shcode: 1,
+      score: { $meta: "searchScore" }
+    }
+  }
+]);
+```
+
+## 시나리오 9
+
+9번은 fuzzy 기능 검증 목적이므로 `title`, `contents` should 검색을 유지한다.
+
+실행:
+
+```sh
+npm run mig:9 -- --query "삼영전자" --limit 5
+```
+
+## 시나리오 10
+
+10번은 highlight 기능 검증 목적이므로 `title`, `contents` 검색과 highlight path를 유지한다.
+
+실행:
+
+```sh
+npm run mig:10 -- --query "삼성전자 실적" --limit 5
+```
+
+## 검증 완료
+
+아래 dry-run으로 `db.news_mig`와 `news_search_index` 사용을 확인했다.
+
+```sh
+npm run mig:1 -- --query "삼성전자" --dry-run --limit 1 --no-log
+npm run mig:4 -- --dgubun 4 --query "삼성전자" --dry-run --limit 1 --no-log
+npm run mig:10 -- --query "삼성전자 실적" --dry-run --limit 1 --no-log
+```
+
+대표 출력:
+
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "삼성전자",
+              path: "title",
+              matchCriteria: "all"
+            }
+          }
+        ],
+        filter: [
+          {
+            equals: {
+              path: "shcode.shcode",
+              value: "005930"
+            }
+          }
+        ]
+      },
+      sort: {
+        score: { $meta: "searchScore" },
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 1 }
+]);
 ```
 
 ## 참고
 
-검색어가 있는 시나리오는 `title`, `contents`를 대상으로 검색한다.
+`news_mig`이 split document 구조라면 `title/shcode` 문서와 `contents` 문서가 분리되어 있을 수 있다.
 
-검색어가 있는 일반 시나리오는 `score` 1차, `newscode_ts` 2차로 정렬한다.
+1~8번 업무 검색은 parent document의 `title` 중심으로 수행한다.
 
-검색어가 없는 조건 조회 시나리오는 `newscode_ts` 최신순으로 정렬한다.
-
-시나리오 1은 현재 POC 확인용으로 기본 검색어 `에헤라`를 사용한다.
+본문까지 결과에 붙여야 하는 경우에는 parent `_id` 기준으로 contents document를 `$lookup`하는 별도 쿼리가 필요하다.
