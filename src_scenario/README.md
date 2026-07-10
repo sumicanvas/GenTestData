@@ -50,15 +50,6 @@ news_search_index
 | `dgubun` | `token` | 뉴스구분 exact filter |
 | `newscode_ts` | `number` | 최신순 정렬 |
 
-## 변경 기준
-
-기존 `news_mig_500` 기준을 아래처럼 변경했다.
-
-| 항목 | 변경 전 | 변경 후 |
-|---|---|---|
-| Collection | `news_mig_500` | `news_mig` |
-| Search Index | `news5_search_index` | `news_search_index` |
-| npm script prefix | `mig500:*` | `mig:*` |
 
 1~8번 시나리오의 일반 검색은 `title`만 조회하도록 구성했다.
 
