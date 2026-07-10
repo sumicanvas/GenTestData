@@ -635,7 +635,62 @@ db.news_mig.aggregate([
   { $limit: 1 }
 ]);
 ```
+### 시나리오 11 쿼리 의미
 
+`path: ["title", "contents"]`는 `title`과 `contents`가 둘 다 존재해야 한다는 의미가 아니다.
+
+| 결과 유형 | 포함 필드 |
+|---|---|
+| title 문서 | `title`, `dgubun`, `shcode`, `newscode_ts` |
+| contents 문서 | `parent`, `contents` |
+
+
+## 검증 완료
+
+아래 dry-run으로 `db.news_mig`와 `news_search_index` 사용을 확인
+
+```sh
+npm run mig:1 -- --query "삼성전자" --dry-run --limit 1 --no-log
+npm run mig:4 -- --dgubun 4 --query "삼성전자" --dry-run --limit 1 --no-log
+npm run mig:10 -- --query "삼성전자 실적" --dry-run --limit 1 --no-log
+npm run mig:11 -- --query "삼성전자 실적" --dry-run --limit 1 --no-log
+```
+
+대표 출력:
+
+```js
+db.news_mig.aggregate([
+  {
+    $search: {
+      index: "news_search_index",
+      compound: {
+        must: [
+          {
+            text: {
+              query: "삼성전자",
+              path: "title",
+              matchCriteria: "all"
+            }
+          }
+        ],
+        filter: [
+          {
+            equals: {
+              path: "shcode.shcode",
+              value: "005930"
+            }
+          }
+        ]
+      },
+      sort: {
+        score: { $meta: "searchScore" },
+        newscode_ts: -1
+      }
+    }
+  },
+  { $limit: 1 }
+]);
+```
 ## 참고
 
 `news_mig`이 split document 구조라면 `title/shcode` 문서와 `contents` 문서가 분리되어 있을 수 있다.
