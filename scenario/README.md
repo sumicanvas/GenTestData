@@ -787,52 +787,7 @@ title 또는 contents 중 검색어가 매칭되는 필드에서 검색한다.
 | title 문서 | `title`, `dgubun`, `shcode`, `newscode_ts` |
 | contents 문서 | `parent`, `contents` |
 
-## 검증 완료
 
-아래 dry-run으로 `db.news_mig`와 `news_search_index` 사용을 확인한다.
-
-```sh
-npm run mig:1 -- --query "일품생명" --dry-run --limit 1 --no-log
-npm run mig:4 -- --dgubun 4 --query "삼성전자" --dry-run --limit 1 --no-log
-npm run mig:10 -- --query "삼성전자 실적" --dry-run --limit 1 --no-log
-npm run mig:11 -- --query "삼성전자 실적" --dry-run --limit 1 --no-log
-```
-
-대표 출력:
-
-```js
-db.news_mig.aggregate([
-  {
-    $search: {
-      index: "news_search_index",
-      compound: {
-        must: [
-          {
-            text: {
-              query: "삼성전자",
-              path: "title",
-              matchCriteria: "all"
-            }
-          }
-        ],
-        filter: [
-          {
-            equals: {
-              path: "dgubun",
-              value: "4"
-            }
-          }
-        ]
-      },
-      sort: {
-        score: { $meta: "searchScore" },
-        newscode_ts: -1
-      }
-    }
-  },
-  { $limit: 1 }
-]);
-```
 
 ## 참고
 
