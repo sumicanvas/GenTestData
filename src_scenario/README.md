@@ -29,6 +29,7 @@ mig:7
 mig:8
 mig:9
 mig:10
+mig:11
 ```
 
 ## Search Index 기준
