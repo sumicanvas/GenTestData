@@ -1,6 +1,7 @@
-# news_mig_500 Title-Only MQL 시나리오
+# news_mig 최종 MQL 시나리오
 
-`news_mig_500` 컬렉션과 `news5_search_index` 기준으로 생성되는 시나리오별 MQL을 정리한다.
+`news_mig_500` 컬렉션과 `news5_search_index` 기준으로 생성되는 시나리오별 MQL을 정리한다.   
+최종은 news_mig컬렉션과 news_search_index 변경함.
 
 ## 기준
 
