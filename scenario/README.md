@@ -119,7 +119,7 @@ title 검색 후 최신순 조회
 실행:
 
 ```sh
-npm run mig:1 -- --query "일품생명" --limit 5
+npm run mig:1 -- --query "에헤라" --limit 5
 ```
 
 참고: `--query`를 생략하면 프로그램 기본값 `에헤라`를 사용한다.
