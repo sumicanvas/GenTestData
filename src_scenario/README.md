@@ -113,7 +113,7 @@ npm run mig:1 -- --limit 5
 ```
 
 ```sh
-npm run mig:1 -- --query "일품생명" --limit 5
+npm run mig:1 -- --query "에헤라" --limit 5
 ```
 
 MQL:
@@ -127,7 +127,7 @@ db.news_mig.aggregate([
         must: [
           {
             text: {
-              query: "삼성전자",
+              query: "에헤라",
               path: "title"
             }
           }
