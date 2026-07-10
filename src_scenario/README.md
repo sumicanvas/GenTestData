@@ -135,7 +135,7 @@ db.news_mig.aggregate([
         must: [
           {
             text: {
-              query: "일품생명",
+              query: "에헤라",
               path: "title"
             }
           }
