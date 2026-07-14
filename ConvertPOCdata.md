@@ -2,6 +2,38 @@
 
 Oracle 12c R2에서 `JSON_OBJECT()`로 export한 결과 중 문자열 값에 큰따옴표가 빠진 데이터를 MongoDB import 가능한 JSON Lines로 복구하는 스크립트다.
 
+## 폴더 구조
+
+가독성을 위해 입력과 출력을 아래 폴더로 나눈다.
+
+```text
+char/
+  input/
+    news_mast.json
+    news_jmcode.json
+    news_cont_p.json
+  output/
+    news_mast.json
+    news_jmcode.json
+    news_cont_p.json
+    bad/
+      news_mast.bad.json
+      news_jmcode.bad.json
+      news_cont_p.bad.json
+```
+
+입력 파일은 `input/` 아래에 둔다.
+
+출력 파일은 기본적으로 `output/` 아래에 입력 파일과 같은 이름의 `.json` 확장자로 저장된다.
+
+예:
+
+```text
+input/news_mast.json -> output/news_mast.json
+input/news_jmcode.json -> output/news_jmcode.json
+input/news_cont_p.json -> output/news_cont_p.json
+```
+
 ## 생성 파일
 
 ```text
@@ -71,28 +103,81 @@ YMD, SEQNO, NEWSCODE, LINENO, CONTENT
 cd /Users/sumi.ryu/Documents/opencode/kbpoc/char
 ```
 
-### NEWS_MAST 변환
+### 1. 입력 파일 배치
+
+Oracle에서 받은 파일을 `input/` 폴더에 넣는다.
+
+```text
+input/news_mast.json
+input/news_jmcode.json
+input/news_cont_p.json
+```
+
+### 2. NEWS_MAST 변환
+
+```sh
+python repair_news_mast_json.py --input input/news_mast.json
+```
+
+출력:
+
+```text
+output/news_mast.json
+output/bad/news_mast.bad.json
+```
+
+### 3. NEWS_JMCODE 변환
+
+```sh
+python repair_news_jmcode_json.py --input input/news_jmcode.json
+```
+
+출력:
+
+```text
+output/news_jmcode.json
+output/bad/news_jmcode.bad.json
+```
+
+### 4. NEWS_CONT_P 변환
+
+```sh
+python repair_news_cont_p_json.py --input input/news_cont_p.json
+```
+
+출력:
+
+```text
+output/news_cont_p.json
+output/bad/news_cont_p.bad.json
+```
+
+## 출력 파일명 규칙
+
+기본 규칙은 다음과 같다.
+
+```text
+input/<원본파일명>.json -> output/<원본파일명>.json
+```
+
+예:
+
+```text
+input/news_mast.json -> output/news_mast.json
+```
+
+입력 파일 확장자가 `.txt`여도 출력은 `.json`으로 저장된다.
+
+```text
+input/news_mast.txt -> output/news_mast.json
+```
+
+원하는 출력 경로를 직접 지정할 수도 있다.
 
 ```sh
 python repair_news_mast_json.py \
-  --input raw/news_mast_bad.json \
-  --output fixed/news_mast_fixed.jsonl
-```
-
-### NEWS_JMCODE 변환
-
-```sh
-python repair_news_jmcode_json.py \
-  --input raw/news_jmcode_bad.json \
-  --output fixed/news_jmcode_fixed.jsonl
-```
-
-### NEWS_CONT_P 변환
-
-```sh
-python repair_news_cont_p_json.py \
-  --input raw/news_cont_p_bad.json \
-  --output fixed/news_cont_p_fixed.jsonl
+  --input input/news_mast.json \
+  --output output/custom_news_mast.json
 ```
 
 ## 테스트 실행
@@ -101,8 +186,7 @@ python repair_news_cont_p_json.py \
 
 ```sh
 python repair_news_mast_json.py \
-  --input raw/news_mast_bad.json \
-  --output fixed/news_mast_sample.jsonl \
+  --input input/news_mast.json \
   --limit 100
 ```
 
@@ -110,16 +194,16 @@ python repair_news_mast_json.py \
 
 변환하지 못한 라인은 별도 bad row 파일에 저장된다.
 
-기본 파일명:
+기본 위치:
 
 ```text
-<output>.bad.jsonl
+output/bad/<원본파일명>.bad.json
 ```
 
 예:
 
 ```text
-fixed/news_mast_fixed.jsonl.bad.jsonl
+output/bad/news_mast.bad.json
 ```
 
 bad row에는 원본 라인과 오류 메시지가 저장된다.
@@ -138,9 +222,9 @@ import json
 from pathlib import Path
 
 for path in [
-    "fixed/news_mast_fixed.jsonl",
-    "fixed/news_jmcode_fixed.jsonl",
-    "fixed/news_cont_p_fixed.jsonl",
+    "output/news_mast.json",
+    "output/news_jmcode.json",
+    "output/news_cont_p.json",
 ]:
     count = 0
     with Path(path).open(encoding="utf-8") as f:
@@ -153,10 +237,14 @@ PY
 
 ## MongoDB import 예시
 
+출력 파일 확장자는 `.json`이지만 내용은 JSON Lines 형식이다.
+
+`mongoimport`는 기본적으로 JSON Lines를 처리할 수 있으므로 `--jsonArray`는 사용하지 않는다.
+
 ```sh
-mongoimport --uri "$MONGODB_URI" --db newsdb --collection news_mast_fixed --drop --file fixed/news_mast_fixed.jsonl
-mongoimport --uri "$MONGODB_URI" --db newsdb --collection news_jmcode_fixed --drop --file fixed/news_jmcode_fixed.jsonl
-mongoimport --uri "$MONGODB_URI" --db newsdb --collection news_cont_p_fixed --drop --file fixed/news_cont_p_fixed.jsonl
+mongoimport --uri "$MONGODB_URI" --db newsdb --collection news_mast_fixed --drop --file output/news_mast.json
+mongoimport --uri "$MONGODB_URI" --db newsdb --collection news_jmcode_fixed --drop --file output/news_jmcode.json
+mongoimport --uri "$MONGODB_URI" --db newsdb --collection news_cont_p_fixed --drop --file output/news_cont_p.json
 ```
 
 ## 주의사항
@@ -180,3 +268,21 @@ NEWS_CONT_P : YMD, SEQNO, NEWSCODE, LINENO, CONTENT
 ```
 
 이런 bad row는 수동 확인이 필요하다.
+
+## 요약
+
+기본 실행 명령은 다음 3개다.
+
+```sh
+python repair_news_mast_json.py --input input/news_mast.json
+python repair_news_jmcode_json.py --input input/news_jmcode.json
+python repair_news_cont_p_json.py --input input/news_cont_p.json
+```
+
+기본 출력은 다음 3개다.
+
+```text
+output/news_mast.json
+output/news_jmcode.json
+output/news_cont_p.json
+```
