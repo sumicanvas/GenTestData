@@ -269,6 +269,57 @@ NEWS_CONT_P : YMD, SEQNO, NEWSCODE, LINENO, CONTENT
 
 이런 bad row는 수동 확인이 필요하다.
 
+## Troubleshooting
+
+### NEWS_JMCODE가 `missing next key delimiter: KIND2`로 bad 처리되는 경우
+
+`NEWS_JMCODE`에는 `KIND2` 컬럼이 없다.
+
+따라서 아래 오류가 나오면 `NEWS_JMCODE` 파일을 `NEWS_MAST` 스크립트로 처리했거나, 이전 버전 스크립트로 생성된 bad 파일을 보고 있을 가능성이 높다.
+
+```text
+missing next key delimiter: KIND2
+```
+
+올바른 실행:
+
+```sh
+python repair_news_jmcode_json.py --input input/news_jmcode.json
+```
+
+### NEWS_CONT_P가 `missing key: DGUBUN`으로 bad 처리되는 경우
+
+`NEWS_CONT_P` DDL에는 `DGUBUN` 컬럼이 없다.
+
+따라서 아래 오류가 나오면 `NEWS_CONT_P` 파일을 `NEWS_MAST` 또는 `NEWS_JMCODE` 스크립트로 처리했거나, 이전 버전 스크립트로 생성된 bad 파일을 보고 있을 가능성이 높다.
+
+```text
+missing key: DGUBUN
+```
+
+올바른 실행:
+
+```sh
+python repair_news_cont_p_json.py --input input/news_cont_p.json
+```
+
+### bad 파일이 이전 결과인지 확인
+
+스크립트는 실행할 때마다 output 파일과 bad 파일을 새로 쓴다.
+
+혼동을 피하려면 아래 순서로 다시 실행한다.
+
+```sh
+rm -f output/news_mast.json output/news_jmcode.json output/news_cont_p.json
+rm -f output/bad/news_mast.bad.json output/bad/news_jmcode.bad.json output/bad/news_cont_p.bad.json
+
+python repair_news_mast_json.py --input input/news_mast.json
+python repair_news_jmcode_json.py --input input/news_jmcode.json
+python repair_news_cont_p_json.py --input input/news_cont_p.json
+```
+
+정상이라면 실행 결과에서 `bad_rows=0`이 나와야 한다.
+
 ## 요약
 
 기본 실행 명령은 다음 3개다.
