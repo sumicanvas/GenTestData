@@ -1,4 +1,4 @@
-# `$unionWith` 기반 content lookup 제안 검토
+# YMD+NEWSCODE or YMD+SEQ 기반 content lookup 제안 검토
 
 `migration_mg`에서 `news_mast`와 `news_cont_*`를 merge할 때, 고객이 전달한 `$unionWith` 기반 lookup 제안을 검토한 내용이다.
 
