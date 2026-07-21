@@ -23,41 +23,8 @@ NEWS_CONT_P  -> news_cont_p
 | `NEWS_MAST : NEWS_CONT_P` | `1:N` |
 
 ### Source ERD
+<img width="468" height="403" alt="image" src="https://github.com/user-attachments/assets/ccf078da-a18d-4fec-bdae-78a96f488c8a" />
 
-```mermaid
-erDiagram
-    NEWS_MAST ||--o{ NEWS_JMCODE : "SEQNO" "YMD" "NEWSCODE"
-    NEWS_MAST ||--o{ NEWS_CONT_P : "SEQNO" "YMD" "NEWSCODE"
-
-    NEWS_MAST {
-        string DGUBUN
-        string YMD
-        string SEQNO
-        string NEWSCODE
-        string KIND
-        string KIND2
-        string TITLE
-        string SHCODE
-    }
-
-    NEWS_JMCODE {
-        string DGUBUN
-        string YMD
-        string SEQNO
-        string SHCODE
-        string EXPCODE
-        string NEWSCODE
-        string KIND
-    }
-
-    NEWS_CONT_P {
-        string YMD
-        string SEQNO
-        string NEWSCODE
-        number LINENO
-        string CONTENT
-    }
-```
 
 ## Target: MongoDB Materialized Model
 
@@ -133,26 +100,8 @@ news_mast + news_jmcode + news_cont_p
 
 ## Target ERD
 
-```mermaid
-erDiagram
-    NEWS_MIG_MAST ||--o| NEWS_MIG_CONT : "parent"
+<img width="468" height="188" alt="image" src="https://github.com/user-attachments/assets/63e30250-3da9-44bc-aadc-5ea3c3ee5210" />
 
-    NEWS_MIG_MAST {
-        ObjectId _id PK
-        string dgubun
-        string title
-        number newscode_ts
-        string shcodeTop
-        array kind
-        array shcode
-    }
-
-    NEWS_MIG_CONT {
-        ObjectId _id PK
-        ObjectId parent FK
-        array contents
-    }
-```
 
 ## Embedded jmcode Shape
 
