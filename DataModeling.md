@@ -26,13 +26,13 @@ NEWS_CONT_P  -> news_cont_p
 
 ```mermaid
 erDiagram
-    NEWS_MAST ||--o{ NEWS_JMCODE : "SEQNO"
-    NEWS_MAST ||--o{ NEWS_CONT_P : "SEQNO"
+    NEWS_MAST ||--o{ NEWS_JMCODE : "SEQNO", "YMD", "NEWSCODE"
+    NEWS_MAST ||--o{ NEWS_CONT_P : "SEQNO", "YMD", "NEWSCODE"
 
     NEWS_MAST {
         string DGUBUN
         string YMD
-        string SEQNO PK
+        string SEQNO
         string NEWSCODE
         string KIND
         string KIND2
@@ -43,7 +43,7 @@ erDiagram
     NEWS_JMCODE {
         string DGUBUN
         string YMD
-        string SEQNO FK
+        string SEQNO
         string SHCODE
         string EXPCODE
         string NEWSCODE
@@ -52,7 +52,7 @@ erDiagram
 
     NEWS_CONT_P {
         string YMD
-        string SEQNO FK
+        string SEQNO
         string NEWSCODE
         number LINENO
         string CONTENT
