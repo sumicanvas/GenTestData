@@ -26,8 +26,8 @@ NEWS_CONT_P  -> news_cont_p
 
 ```mermaid
 erDiagram
-    NEWS_MAST ||--o{ NEWS_JMCODE : "SEQNO", "YMD", "NEWSCODE"
-    NEWS_MAST ||--o{ NEWS_CONT_P : "SEQNO", "YMD", "NEWSCODE"
+    NEWS_MAST ||--o{ NEWS_JMCODE : "SEQNO" "YMD" "NEWSCODE"
+    NEWS_MAST ||--o{ NEWS_CONT_P : "SEQNO" "YMD" "NEWSCODE"
 
     NEWS_MAST {
         string DGUBUN
