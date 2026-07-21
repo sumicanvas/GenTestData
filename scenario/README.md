@@ -95,7 +95,7 @@ npm run mig:4 -- --dgubun 4 --query "삼성전자" --limit 5
 | 1 | 검색어 O, 종목코드 X, 뉴스구분 X, 검색 결과 없음 검증 | `mig:1` |
 | 2 | 검색어 X, 종목코드 X, 뉴스구분 O | `mig:2` |
 | 3 | 검색어 O, 종목코드 O, 뉴스구분 X | `mig:3` |
-| 4 | 검색어 O, 종목코드 X, 뉴스구분 O | `mig:4` |
+| 4 | 검색어 O, 종목코드 O, 뉴스구분 O | `mig:4` |
 | 5 | 검색어 X, 종목코드 O, 뉴스구분 X | `mig:5` |
 | 6 | 검색어 X, 종목코드 O, 뉴스구분 O | `mig:6` |
 | 7 | 검색어 O, 종목코드 X, 뉴스구분 X | `mig:7` |
@@ -282,7 +282,7 @@ db.news_mig.aggregate([
 
 ```text
 검색어 있음
-종목코드 없음
+종목코드 있음
 뉴스구분 있음
 뉴스구분 filter + title 검색
 ```
@@ -304,8 +304,8 @@ db.news_mig.aggregate([
         must: [
           {
             text: {
-              query: "삼성전자",
-              path: "title",
+              query: "하이닉스",
+              path: ["title", "contents"],
               matchCriteria: "all"
             }
           }
@@ -314,7 +314,13 @@ db.news_mig.aggregate([
           {
             equals: {
               path: "dgubun",
-              value: "4"
+              value: "S"
+            }
+          },
+          {
+            equals: {
+              path: "shcode.shcode",
+              value: "000660"
             }
           }
         ]
@@ -325,7 +331,7 @@ db.news_mig.aggregate([
       }
     }
   },
-  { $limit: 5 },
+  { $limit: 100 },
   {
     $project: {
       _id: 1,
@@ -334,6 +340,7 @@ db.news_mig.aggregate([
       contents: 1,
       dgubun: 1,
       shcode: 1,
+      kind: 1,
       score: { $meta: "searchScore" }
     }
   }
