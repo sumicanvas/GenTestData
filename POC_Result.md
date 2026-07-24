@@ -206,7 +206,7 @@ news_mast + news_jmcode + news_cont_*
 erDiagram
     NEWS_MIG_MAST ||--o| NEWS_MIG_CONT : "parent"
 
-    NEWS_MIG_MAST {
+    NEWS_MIG {
         ObjectId _id PK
         string dgubun
         string title
@@ -217,7 +217,7 @@ erDiagram
         array shcode
     }
 
-    NEWS_MIG_CONT {
+    NEWS_MIG {
         ObjectId _id PK
         ObjectId parent FK
         array contents
