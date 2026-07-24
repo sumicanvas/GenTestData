@@ -253,7 +253,8 @@ erDiagram
 
 ### 수행시간 비교 그래프
 
-![시나리오별 수행시간 비교](assets/scenario_time_comparison.svg)
+<img width="842" height="280" alt="image" src="https://github.com/user-attachments/assets/fc2018d6-b861-4400-a945-d550f256bd9c" />
+
 
 ### 성능 요약
 
