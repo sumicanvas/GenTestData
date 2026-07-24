@@ -4,13 +4,6 @@
 
 본 문서는 뉴스 검색 업무를 대상으로 Oracle 기반 조회와 MongoDB 기반 조회의 수행 결과를 비교하고, MongoDB 적용 시 데이터 모델링 및 검색 구조를 정리하기 위한 PoC 결과보고서다.
 
-참고 문서:
-
-```text
-[미래에셋증권] MongoDB Pilot 수행보고서_20230911_최종본.pdf
-260720_MongoDB_PoC 검증 시나리오_결과_오라클_포함_교보증권.xlsx
-ERD.docx
-```
 
 ## Agenda
 
